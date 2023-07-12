@@ -1,0 +1,30 @@
+# Check if Internet Explorer is enabled
+$isEnabled = Test-Path -Path "HKLM:\SOFTWARE\Policies\Microsoft\Internet Explorer\Main\NotifyDisableIEOptions"
+
+if ($isEnabled) {
+    Write-Host "Internet Explorer is currently enabled."
+} else {
+    Write-Host "Internet Explorer is not enabled."
+
+    # Enable Internet Explorer by creating the missing registry key
+    New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\Internet Explorer\Main" -Force | Out-Null
+    New-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Internet Explorer\Main" -Name "NotifyDisableIEOptions" -Value 1 -PropertyType "DWord" -Force | Out-Null
+
+    Write-Host "Internet Explorer has been enabled."
+}
+
+# Check if Internet Explorer Integration Reload in IE Mode is allowed
+$policyValue = Get-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Internet Explorer\Main" -Name "InternetExplorerIntegrationReloadInIEModeAllowed" -ErrorAction SilentlyContinue
+
+if ($policyValue -eq $null) {
+    Write-Host "InternetExplorerIntegrationReloadInIEModeAllowed policy is not configured."
+} elseif ($policyValue.InternetExplorerIntegrationReloadInIEModeAllowed -eq 1) {
+    Write-Host "InternetExplorerIntegrationReloadInIEModeAllowed policy is already configured and set to allow."
+} else {
+    Write-Host "InternetExplorerIntegrationReloadInIEModeAllowed policy is not set to allow."
+
+    # Set the policy to allow rendering content in IE Mode
+    Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Internet Explorer\Main" -Name "InternetExplorerIntegrationReloadInIEModeAllowed" -Value 1
+
+    Write-Host "InternetExplorerIntegrationReloadInIEModeAllowed policy has been configured to allow."
+}
